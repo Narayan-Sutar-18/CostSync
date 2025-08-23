@@ -61,36 +61,48 @@ from bs4 import BeautifulSoup
 
 def scrape_reliancedigital(url: str) -> Optional[int]:
     """
-    Reliance Digital product pages contain a JSON-LD script with "offers": {"price": ...}
+    Reliance Digital product pages contain a JSON-LD script with "offers": {"price": ...}.
+    We'll try that first, then fallback to visible price tags.
     """
-    soup = _get_soup(url)
+    try:
+        soup = _get_soup(url)
 
-    # Find all <script type="application/ld+json">
-    for script in soup.find_all("script", type="application/ld+json"):
-        try:
-            data = json.loads(script.string.strip())
-        except Exception:
-            continue
+        # Block detection (Cloudflare / bot protection)
+        if "Access Denied" in soup.text or "blocked" in soup.text.lower():
+            raise RuntimeError("Reliance Digital blocked this request (403)")
 
-        # Case: single Product object
-        if isinstance(data, dict) and data.get("@type") == "Product":
-            offers = data.get("offers")
-            if offers and "price" in offers:
-                try:
+        # --- JSON-LD structured data ---
+        for script in soup.find_all("script", type="application/ld+json"):
+            try:
+                data = json.loads(script.string.strip())
+            except Exception:
+                continue
+
+            # Case: single Product object
+            if isinstance(data, dict) and data.get("@type") == "Product":
+                offers = data.get("offers")
+                if offers and "price" in offers:
                     return int(float(offers["price"]))
-                except Exception:
-                    pass
 
-        # Case: array of objects
-        if isinstance(data, list):
-            for obj in data:
-                if obj.get("@type") == "Product" and "offers" in obj:
-                    try:
+            # Case: array of objects
+            if isinstance(data, list):
+                for obj in data:
+                    if obj.get("@type") == "Product" and "offers" in obj:
                         return int(float(obj["offers"]["price"]))
-                    except Exception:
-                        pass
 
-    # Fallback: nothing found
-    return None
+        # --- Fallback: look for visible price elements ---
+        selectors = [
+            ".pdp__offerPrice",
+            ".pdp__finalPrice",
+            ".price",  # generic
+        ]
+        for sel in selectors:
+            el = soup.select_one(sel)
+            if el:
+                return _clean_price(el.get_text(strip=True))
 
+        return None
 
+    except Exception as e:
+        print(f"[error] RelianceDigital scrape failed for {url}: {e}")
+        return None
