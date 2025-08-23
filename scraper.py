@@ -4,7 +4,7 @@ from email.mime.text import MIMEText
 from typing import Optional
 from dotenv import load_dotenv
 from pymongo import MongoClient, DESCENDING
-from scrapers import scrape_amazon, scrape_snapdeal,scrape_tatacliq,scrape_shoppersstop
+from scrapers import scrape_amazon, scrape_snapdeal,scrape_reliance_digital
 
 # Load env
 load_dotenv()
@@ -35,8 +35,10 @@ col = db[MONGO_COLLECTION]
 SCRAPER_MAP = {
     "Amazon": scrape_amazon,
     "Snapdeal": scrape_snapdeal,
-    "TataCliq": scrape_tatacliq,
-    "ShoppersStop": scrape_shoppersstop
+    # "Croma": scrape_croma,
+    "RelianceDigital": scrape_reliance_digital,
+    # "TataCliq": scrape_tatacliq,
+    # "ShoppersStop": scrape_shoppersstop
 }
 
 
