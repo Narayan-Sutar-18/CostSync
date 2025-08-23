@@ -4,7 +4,7 @@ from email.mime.text import MIMEText
 from typing import Optional
 from dotenv import load_dotenv
 from pymongo import MongoClient, DESCENDING
-from scrapers import scrape_amazon, scrape_snapdeal
+from scrapers import scrape_amazon, scrape_snapdeal,scrape_tatacliq,scrape_shoppersstop
 
 # Load env
 load_dotenv()
@@ -34,8 +34,11 @@ col = db[MONGO_COLLECTION]
 
 SCRAPER_MAP = {
     "Amazon": scrape_amazon,
-    "Snapdeal": scrape_snapdeal, 
+    "Snapdeal": scrape_snapdeal,
+    "TataCliq": scrape_tatacliq,
+    "ShoppersStop": scrape_shoppersstop
 }
+
 
 def send_email_alert(product: str, site: str, price: int, url: str, threshold: int) -> None:
     if not (EMAIL_USER and EMAIL_PASS and EMAIL_TO):

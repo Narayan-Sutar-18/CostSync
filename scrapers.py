@@ -103,3 +103,59 @@ def scrape_snapdeal(url: str) -> Optional[int]:
             pass
 
     return None
+
+def scrape_tatacliq(url: str) -> Optional[int]:
+    soup = _get_soup(url)
+    candidates = [
+        ("span", {"class": "ProductDescription__price"}),
+        ("span", {"class": "Price__discounted"}),
+        ("span", {"class": "Price__actual"}),
+        ("h3", {}),  # NEW: plain <h3> tags
+    ]
+    for tag, attrs in candidates:
+        el = soup.find(tag, attrs)
+        if el:
+            price = _clean_price(el.get_text(strip=True))
+            if price:
+                return price
+
+    # JSON-LD fallback
+    script = soup.find("script", type="application/ld+json")
+    if script:
+        try:
+            data = json.loads(script.string)
+            if isinstance(data, dict) and "offers" in data:
+                return _clean_price(data["offers"].get("price"))
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    return None
+
+def scrape_shoppersstop(url: str) -> Optional[int]:
+    soup = _get_soup(url)
+
+    # Look through all JSON-LD scripts
+    for script in soup.find_all("script", type="application/ld+json"):
+        try:
+            data = json.loads(script.string)
+            if isinstance(data, dict) and "offers" in data:
+                price = data["offers"].get("price")
+                if price:
+                    return _clean_price(str(price))
+        except (json.JSONDecodeError, TypeError):
+            continue  # Skip invalid blocks
+
+    # Fallback to direct HTML search
+    candidates = [
+        ("span", {"class": "offer-price"}),
+        ("span", {"class": "product-price"}),
+        ("span", {"class": "price"}),
+    ]
+    for tag, attrs in candidates:
+        el = soup.find(tag, attrs)
+        if el:
+            price = _clean_price(el.get_text(strip=True))
+            if price:
+                return price
+
+    return None

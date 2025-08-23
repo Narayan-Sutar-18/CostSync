@@ -5,7 +5,9 @@
             "threshold": 2000,
             "urls": {
                 "Amazon": "https://amzn.in/d/f9H1uyJ",
-                "Snapdeal": "https://m.snapdeal.com/product/campus-navy-mens-sports-running/5764608200676964672"
+                "Snapdeal": "https://m.snapdeal.com/product/campus-navy-mens-sports-running/5764608200676964672",
+                 "TataCliq": "https://www.tatacliq.com/campus-mens-hurricane-blue-running-shoes/p-mp000000018558652",
+                  "ShoppersStop": "https://www.shoppersstop.com/skechers-synthetic-slip-on-men-s-casual-shoes/p-FMSK232629/colorChange/FMSK232629_OLIVE"
             }
         }
        
