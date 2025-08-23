@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CostSync</title>
+
+    <!-- Bootstrap + Icons + Chart.js -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --card-border: #2a2a2a;
+            --card-border-hover: #3a3a3a;
+            --text: #eaeaea;
+            --muted: #a6a6a6;
+            --table-head: #000000;
+            --accent-amz-start: #ff9900;
+            --accent-amz-end: #ffb84d;
+            --accent-rel-start: #0070f3;
+            --accent-rel-end: #4da6ff;
+        }
+
+        html,
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .navbar {
+            background: #3f51b5;
+            border-bottom: 2px solid #ff9900;
+            height: 70px;
+        }
+
+        .navbar-brand {
+            color: #fff !important;
+            font-weight: 700;
+        }
+
+        .btn-refresh {
+            background: #fff;
+            color: #000;
+            border-radius: .6rem;
+            font-weight: 600;
+            padding: .45rem .9rem;
+        }
+
+        .card-custom {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 20px;
+            margin-bottom: 1.25rem;
+        }
+
+        .highlight-card {
+            border-radius: 1rem;
+            padding: 20px;
+            margin-bottom: 1.25rem;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 200px;
+        }
+
+        .highlight-amazon {
+            background: linear-gradient(135deg, var(--accent-amz-start), var(--accent-amz-end));
+        }
+
+        .highlight-reliance {
+            background: linear-gradient(135deg, var(--accent-rel-start), var(--accent-rel-end));
+        }
+
+        .highlight-default {
+            background: #2a2a2a;
+            border: 1px solid var(--card-border-hover);
+            color: var(--text);
+        }
+
+        .highlight-card h5 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 0 0 .6rem;
+        }
+
+        .highlight-card .price {
+            font-size: 1.9rem;
+            font-weight: 700;
+            margin: .25rem 0 .9rem;
+        }
+
+        .btn-visit {
+            border-radius: .5rem;
+            font-weight: 700;
+            padding: .4rem .9rem;
+        }
+
+        .btn-visit.light {
+            background: #fff;
+            color: #000;
+        }
+
+        .btn-visit.dark {
+            background: #000;
+            color: #fff;
+            border: 1px solid #444;
+        }
+
+        .table thead th {
+            background: var(--table-head);
+            color: #fff;
+            border: 0;
+        }
+
+        .table-dark {
+            --bs-table-bg: var(--card);
+            --bs-table-striped-bg: #202020;
+            --bs-table-hover-bg: #242424;
+        }
+
+        .link-btn {
+            padding: .25rem .55rem;
+            border: 1px solid #555;
+            border-radius: .4rem;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .link-btn:hover {
+            background: #333;
+            color: #fff;
+        }
+
+        .history-panel {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: .6rem .25rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .history-item:last-child {
+            border-bottom: 0;
+        }
+
+        .price-up {
+            color: #ff6b6b;
+            font-weight: 700;
+        }
+
+        .price-down {
+            color: #4cd964;
+            font-weight: 700;
+        }
+
+        .filter-btns .btn {
+            margin: .2rem;
+            border-radius: .5rem;
+        }
+
+        .chart-card canvas {
+            background: var(--card);
+            border-radius: .8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-dark px-3">
+        <a class="navbar-brand" href="#">CostSync</a>
+        <button id="refreshBtn" class="btn btn-refresh"><i class="bi bi-arrow-repeat"></i> Refresh For Latest Prices</button>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row g-3">
+            <!-- MAIN -->
+            <div class="col-lg-9">
+                <div class="card-custom">
+                    <label class="form-label fw-semibold">Select Product for Trend</label>
+                    <select id="productSelect" class="form-select"></select>
+                </div>
+
+                <h5 class="fw-bold mb-2">Latest Prices by Site</h5>
+                <div id="highlightCards" class="row"></div>
+
+                <div class="card-custom chart-card">
+                    <h5 class="fw-bold mb-3">Price Trend</h5>
+                    <canvas id="chart" height="110"></canvas>
+                </div>
+
+                <div class="card-custom">
+                    <h5 class="fw-bold mb-3">All Latest Prices (Table View)</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Site</th>
+                                    <th>Price</th>
+                                    <th>Link</th>
+                                    <th>Last Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody id="priceTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORY -->
+            <div class="col-lg-3">
+                <div class="card-custom history-panel">
+                    <h5 class="fw-bold mb-2"> Price History</h5>
+                    <div id="historyFilters" class="filter-btns mb-2"></div>
+                    <div id="historyList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchJSON(url) { const r = await fetch(url); return r.json(); }
+        function rupee(n) { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n); }
+
+        const productSelect = document.getElementById('productSelect');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const highlightCards = document.getElementById('highlightCards');
+        const priceTable = document.getElementById('priceTable');
+        const historyFilters = document.getElementById('historyFilters');
+        const historyList = document.getElementById('historyList');
+        let chart, latestData = [], currentProduct = null;
+
+        async function loadAll() {
+            latestData = await fetchJSON('/api/prices');
+            renderProductPicker(latestData);
+            renderEverythingForProduct(currentProduct || productSelect.value);
+        }
+
+        function renderProductPicker(data) {
+            const products = [...new Set(data.map(d => d.product))];
+            productSelect.innerHTML = products.map(p => `<option>${p}</option>`).join('');
+        }
+
+        async function renderEverythingForProduct(product) {
+            currentProduct = product;
+            const filtered = latestData.filter(r => r.product === product);
+            filtered.sort((a, b) => new Date(b.time) - new Date(a.time));
+            renderCards(filtered);
+            renderTable(filtered);
+            await renderHistoryAndChart(product);
+        }
+
+        function renderCards(sorted) {
+            highlightCards.innerHTML = '';
+            const bySite = {};
+            for (const r of sorted) if (!bySite[r.site]) bySite[r.site] = r;
+            Object.entries(bySite).forEach(([site, latest]) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'col-md-6';
+                const brand = site.toLowerCase().includes('amazon') ? 'highlight-amazon' :
+                    site.toLowerCase().includes('reliance') ? 'highlight-reliance' : 'highlight-default';
+                const isLightBtn = (brand !== 'highlight-default');
+                wrap.innerHTML = `
+          <div class="highlight-card ${brand}">
+            <div>
+              <h5>${latest.product}</h5>
+              <div class="price">${rupee(latest.price)}</div>
+              <a href="${latest.url}" target="_blank" class="btn btn-visit ${isLightBtn ? 'light' : 'dark'}">Visit Product</a>
+            </div>
+            <small><b>${site}</b> • Last Updated: ${new Date(latest.time).toLocaleString()}</small>
+          </div>`;
+                highlightCards.appendChild(wrap);
+            });
+        }
+
+        function renderTable(sorted) {
+            priceTable.innerHTML = sorted.map(r => `
+        <tr>
+          <td>${r.product}</td>
+          <td>${r.site}</td>
+          <td><strong>${rupee(r.price)}</strong></td>
+          <td><a class="link-btn" href="${r.url}" target="_blank">View</a></td>
+          <td>${new Date(r.time).toLocaleString()}</td>
+        </tr>`).join('');
+        }
+
+        async function renderHistoryAndChart(product) {
+            const history = await fetchJSON(`/api/history?product=${encodeURIComponent(product)}&limit=500`);
+            const sites = [...new Set(history.map(h => h.site))];
+            historyFilters.innerHTML = `<button class="btn btn-sm btn-outline-light active" data-site="all">All</button>` +
+                sites.map(s => `<button class="btn btn-sm btn-outline-light" data-site="${s}">${s}</button>`).join('');
+            historyFilters.querySelectorAll('button').forEach(btn => {
+                btn.onclick = () => {
+                    historyFilters.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    renderHistoryList(history, btn.dataset.site);
+                };
+            });
+            renderHistoryList(history, 'all');
+            renderChart(history);
+        }
+
+        function renderHistoryList(history, siteFilter) {
+            historyList.innerHTML = '';
+            history.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 150).forEach(row => {
+                if (siteFilter !== 'all' && row.site !== siteFilter) return;
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `<div class="fw-semibold">${row.product}</div>
+                         <div>${rupee(row.price)} on <b>${row.site}</b></div>
+                         <div class="text-secondary small">${new Date(row.time).toLocaleString()}</div>`;
+                historyList.appendChild(div);
+            });
+        }
+
+        function renderChart(history) {
+            function toMinuteISO(dateStr) { const d = new Date(dateStr); d.setSeconds(0, 0); return d.toISOString(); }
+            const isoTimes = [...new Set(history.map(h => toMinuteISO(h.time)))].sort();
+            const labels = isoTimes.map(t => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            const bySite = {};
+            history.forEach(h => (bySite[h.site] ||= {})[toMinuteISO(h.time)] = h.price);
+            const datasets = Object.entries(bySite).map(([site, map]) => {
+                const data = isoTimes.map(ts => map[ts] ?? null);
+                let border = '#ccc';
+                if (site.toLowerCase().includes('amazon')) border = getComputedStyle(document.documentElement).getPropertyValue('--accent-amz-start').trim();
+                else if (site.toLowerCase().includes('reliance')) border = getComputedStyle(document.documentElement).getPropertyValue('--accent-rel-start').trim();
+                return { label: site, data, spanGaps: true, fill: false, tension: .3, borderColor: border };
+            });
+            const ctx = document.getElementById('chart').getContext('2d');
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true, plugins: { legend: { labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() } } },
+                    scales: {
+                        x: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() }, grid: { color: '#2a2a2a' } },
+                        y: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() }, grid: { color: '#2a2a2a' } }
+                    }
+                }
+            });
+        }
+
+        productSelect.addEventListener('change', e => renderEverythingForProduct(e.target.value));
+        refreshBtn.addEventListener('click', async () => { refreshBtn.disabled = true; await fetch('/api/refresh', { method: 'POST' }); await loadAll(); refreshBtn.disabled = false; });
+        loadAll(); setInterval(loadAll, 60000);
+    </script>
+</body>
+
+</html>
