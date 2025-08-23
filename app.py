@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, redirect, url_for
 from pymongo import MongoClient
 from scraper import run_scraper 
 
@@ -8,11 +8,12 @@ app = Flask(__name__)
 # --- MongoDB setup ---
 MONGO_URI = os.getenv("MONGO_URI")
 MONGO_DB = os.getenv("MONGO_DB")
-MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
+MONGO_COLLECTION = os.getenv("MONGO_COLLECTION", "prices")
 
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
-col = db[MONGO_COLLECTION]
+col = db[MONGO_COLLECTION]          # prices collection
+user_choice_col = db["user_choice"] # new collection for thresholds + emails
 
 # --- API security key ---
 API_SECRET = os.getenv("API_SECRET", "changeme")  # set this in Render/Relay
@@ -68,6 +69,46 @@ def api_refresh():
         return jsonify({"status": "ok", "message": "Scraper run complete"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# 🔹 NEW: Form to capture threshold + email
+@app.route("/user-choice", methods=["GET", "POST"])
+def user_choice():
+    if request.method == "POST":
+        name = request.form.get("name")
+        threshold = int(request.form.get("threshold"))
+        amazon = request.form.get("amazon")
+        reliance = request.form.get("reliance")
+        snapdeal = request.form.get("snapdeal")
+        email = request.form.get("email")
+
+        doc = {
+            "name": name,
+            "threshold": threshold,
+            "urls": {
+                "Amazon": amazon,
+                "RelianceDigital": reliance,
+                "Snapdeal": snapdeal
+            },
+            "email_id": email
+        }
+
+        user_choice_col.insert_one(doc)
+        return "✅ Saved to MongoDB (user_choice collection)!"
+
+    # GET → show the form
+    return """
+    <h2>Set Product Alert</h2>
+    <form method="POST">
+      Product Name: <input type="text" name="name" required><br><br>
+      Threshold Price: <input type="number" name="threshold" required><br><br>
+      Amazon URL: <input type="url" name="amazon"><br><br>
+      Reliance Digital URL: <input type="url" name="reliance"><br><br>
+      Snapdeal URL: <input type="url" name="snapdeal"><br><br>
+      Email ID: <input type="email" name="email" required><br><br>
+      <button type="submit">Save</button>
+    </form>
+    """
 
 
 if __name__ == "__main__":
