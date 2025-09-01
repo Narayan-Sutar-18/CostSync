@@ -1,30 +1,125 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-  <title>Product Alert Setup</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set Price Alert - CostSync</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #ffffff;
+      /* ✅ White background for entire page */
+      color: #222;
+      /* Dark text */
+      font-family: Inter, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .card {
+      background-color: #ffffff;
+      /* White form background */
+      color: #222;
+      border: 1px solid #ddd;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      /* ⬅️ reduced padding */
+      margin: 2rem auto;
+      /* center horizontally */
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      max-width: 400px;
+      /* ⬅️ set a fixed max width */
+      width: 90%;
+      /* responsive on small screens */
+    }
+
+
+    .card h2 {
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      color: #333;
+    }
+
+    label,
+    .form-label {
+      color: #333;
+      font-weight: 600;
+      margin-top: 0.8rem;
+    }
+
+    .form-control {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      color: #222;
+    }
+
+    .form-control:focus {
+      background-color: #fff;
+      color: #000;
+      border-color: #3f51b5;
+      box-shadow: 0 0 0 0.2rem rgba(63, 81, 181, 0.25);
+    }
+
+    .form-control::placeholder {
+      color: #888;
+    }
+
+    .btn-custom {
+      background: #3f51b5;
+      color: #fff;
+      font-weight: 600;
+      border-radius: .6rem;
+      padding: .6rem 1.2rem;
+      width: 100%;
+      margin-top: 1.5rem;
+    }
+
+    .btn-custom:hover {
+      background: #2f3fa0;
+    }
+  </style>
 </head>
+
 <body>
-  <h2>Set Price Alert</h2>
-  <form action="/save-choice" method="POST">
-    <label for="name">Product Name:</label><br>
-    <input type="text" id="name" name="name" required><br><br>
+  <div class="container">
+    <div class="card shadow-lg">
+      <h2>Set Price Alert</h2>
+      <form action="/user-choice" method="POST">
+        <div class="mb-3">
+          <label for="name" class="form-label">Product Name</label>
+          <input type="text" id="name" name="name" class="form-control" placeholder="e.g. iPhone 15" required>
+        </div>
 
-    <label for="threshold">Threshold Price:</label><br>
-    <input type="number" id="threshold" name="threshold" required><br><br>
+        <div class="mb-3">
+          <label for="threshold" class="form-label">Threshold Price</label>
+          <input type="number" id="threshold" name="threshold" class="form-control" placeholder="e.g. 50000" required>
+        </div>
 
-    <label for="amazon">Amazon URL:</label><br>
-    <input type="url" id="amazon" name="amazon"><br><br>
+        <div class="mb-3">
+          <label for="amazon" class="form-label">Amazon URL</label>
+          <input type="url" id="amazon" name="amazon" class="form-control" placeholder="https://amazon.in/...">
+        </div>
 
-    <label for="reliance">Reliance Digital URL:</label><br>
-    <input type="url" id="reliance" name="reliance"><br><br>
+        <div class="mb-3">
+          <label for="reliance" class="form-label">Reliance Digital URL</label>
+          <input type="url" id="reliance" name="reliance" class="form-control"
+            placeholder="https://reliancedigital.in/...">
+        </div>
 
-    <label for="snapdeal">Snapdeal URL:</label><br>
-    <input type="url" id="snapdeal" name="snapdeal"><br><br>
+        <div class="mb-3">
+          <label for="snapdeal" class="form-label">Snapdeal URL</label>
+          <input type="url" id="snapdeal" name="snapdeal" class="form-control" placeholder="https://snapdeal.com/...">
+        </div>
 
-    <label for="email">Email ID:</label><br>
-    <input type="email" id="email" name="email" required><br><br>
+        <div class="mb-3">
+          <label for="email" class="form-label">Email ID</label>
+          <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" required>
+        </div>
 
-    <button type="submit">Save Choice</button>
-  </form>
+        <button type="submit" class="btn btn-custom">Save Choice</button>
+      </form>
+    </div>
+  </div>
 </body>
+
 </html>
