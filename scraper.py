@@ -66,21 +66,68 @@ def _last_price(product: str, site: str) -> Optional[int]:
     doc = col.find_one({"product": product, "site": site}, sort=[("scraped_at", DESCENDING)], projection={"price": 1})
     return doc["price"] if doc else None
 
-def run_scraper() -> int:
-    try:
-        with open("config.json", "r", encoding="utf-8") as f:
-            config = json.load(f)
-    except Exception as e:
-        logging.error(f"Could not read config.json: {e}")
-        return 1
+# def run_scraper() -> int:
+#     try:
+#         with open("config.json", "r", encoding="utf-8") as f:
+#             config = json.load(f)
+#     except Exception as e:
+#         logging.error(f"Could not read config.json: {e}")
+#         return 1
 
+#     errors = 0
+#     for item in config.get("products", []):
+#         name = item["name"]
+#         threshold = item.get("threshold")
+#         urls = item.get("urls", {})
+
+#         for site, url in urls.items():
+#             scraper = SCRAPER_MAP.get(site)
+#             if not scraper:
+#                 logging.warning(f"No scraper implemented for {site}")
+#                 continue
+
+#             try:
+#                 price = scraper(url)
+#             except Exception as e:
+#                 logging.error(f"{site} scrape failed for {name}: {e}")
+#                 errors += 1
+#                 continue
+
+#             if price is None:
+#                 logging.warning(f"{site} returned no price for {name}")
+#                 continue
+
+#             doc = {
+#                 "product": name,
+#                 "site": site,
+#                 "price": price,
+#                 "url": url,
+#                 "scraped_at": datetime.now(timezone.utc)
+#             }
+#             col.insert_one(doc)
+#             logging.info(f"{name} | {site} → ₹{price}")
+
+#             if threshold is not None:
+#                 last = _last_price(name, site)
+#                 if last is not None and last >= threshold and price < threshold:
+#                     send_email_alert(name, site, price, url, threshold)
+
+#     return 0 if errors == 0 else 1
+
+def run_scraper() -> int:
     errors = 0
-    for item in config.get("products", []):
+
+    # Pull from DB instead of config.json
+    items = list(db["user_choice"].find())
+
+    for item in items:
         name = item["name"]
         threshold = item.get("threshold")
         urls = item.get("urls", {})
 
         for site, url in urls.items():
+            if not url:
+                continue  # skip empty URLs
             scraper = SCRAPER_MAP.get(site)
             if not scraper:
                 logging.warning(f"No scraper implemented for {site}")
@@ -113,6 +160,7 @@ def run_scraper() -> int:
                     send_email_alert(name, site, price, url, threshold)
 
     return 0 if errors == 0 else 1
+
 
 if __name__ == "__main__":
     sys.exit(run_scraper())
